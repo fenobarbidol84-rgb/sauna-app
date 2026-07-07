@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Аренда Сауны">
+  <meta name="theme-color" content="#667eea">
+  <meta name="description" content="Приложение для управления сдачей дома с сауной в аренду">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='120' text-anchor='middle' dominant-baseline='middle' fill='white' font-weight='bold'>🏠</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23667eea' width='180' height='180' rx='40'/><text x='50%' y='50%' font-size='100' text-anchor='middle' dominant-baseline='middle' fill='white' font-weight='bold'>🏠</text></svg>">
+  <title>Аренда Сауны</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Главный экран -->
+    <div id="mainScreen" class="screen active">
+      <header class="header">
+        <h1>📅 Аренда сауны</h1>
+        <button id="addBookingBtn" class="btn-primary">+ Новая бронь</button>
+      </header>
+
+      <div class="calendar-info">
+        <p class="current-date" id="currentDate"></p>
+      </div>
+
+      <div class="bookings-container">
+        <div class="section">
+          <h2>📌 Забронированные даты</h2>
+          <div id="bookedDates" class="dates-list"></div>
+        </div>
+
+        <div class="section">
+          <h2>✅ Свободные даты</h2>
+          <div id="freeDates" class="dates-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Экран добавления брони -->
+    <div id="bookingScreen" class="screen">
+      <header class="header back-header">
+        <button class="btn-back" onclick="showScreen('mainScreen')">← Назад</button>
+        <h2>Новая бронь</h2>
+      </header>
+
+      <form id="bookingForm" class="form">
+        <div class="form-group">
+          <label>Имя гостя</label>
+          <input type="text" id="guestName" placeholder="Введите имя" required>
+        </div>
+
+        <div class="form-group">
+          <label>Выберите даты (1️⃣ заезд, 2️⃣ выезд)</label>
+          <div id="calendarPicker" class="calendar-picker"></div>
+        </div>
+
+        <div id="selectedDatesInfo" class="selected-dates-info" style="display: none;">
+          <p><strong>Заезд:</strong> <span id="selectedCheckIn">-</span></p>
+          <p><strong>Выезд:</strong> <span id="selectedCheckOut">-</span></p>
+          <p><strong>Дней:</strong> <span id="selectedDays">-</span></p>
+        </div>
+
+        <div class="form-group">
+          <label>Время заезда</label>
+          <input type="time" id="checkInTime" value="14:00" required>
+        </div>
+
+        <div class="form-group">
+          <label>Время выезда</label>
+          <input type="time" id="checkOutTime" value="12:00" required>
+        </div>
+
+        <div class="form-group">
+          <label>Сумма за аренду (₽)</label>
+          <input type="number" id="totalPrice" placeholder="0" step="100" min="0" required>
+        </div>
+
+        <div class="shares-preview" id="sharesPreview"></div>
+
+        <button type="submit" class="btn-primary btn-block">Создать бронь</button>
+      </form>
+    </div>
+
+    <!-- Экран деталей брони -->
+    <div id="detailsScreen" class="screen">
+      <header class="header back-header">
+        <button class="btn-back" onclick="showScreen('mainScreen')">← Назад</button>
+        <h2 id="detailsTitle">Детали брони</h2>
+      </header>
+
+      <div class="booking-details">
+        <div id="bookingInfo" class="info-block"></div>
+
+        <div class="section">
+          <h3>💰 Расчет по людям</h3>
+          <div id="sharesTable" class="shares-table"></div>
+        </div>
+
+        <div class="section">
+          <h3>📊 Расходы</h3>
+          <button id="addExpenseBtn" class="btn-secondary btn-block">+ Добавить расход</button>
+          <div id="expensesList" class="expenses-list"></div>
+        </div>
+
+        <button id="deleteBookingBtn" class="btn-danger btn-block">Удалить бронь</button>
+      </div>
+    </div>
+
+    <!-- Экран добавления расхода -->
+    <div id="expenseScreen" class="screen">
+      <header class="header back-header">
+        <button class="btn-back" onclick="showScreen('detailsScreen')">← Назад</button>
+        <h2>Добавить расход</h2>
+      </header>
+
+      <form id="expenseForm" class="form">
+        <div class="form-group">
+          <label>Для кого расход?</label>
+          <select id="expensePerson" required>
+            <option value="">Выберите</option>
+            <option value="Алина">Алина</option>
+            <option value="Папа">Папа</option>
+            <option value="Серега">Серега</option>
+            <option value="Артем">Артем</option>
+            <option value="Дом">Дом</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Сумма расхода (₽)</label>
+          <input type="number" id="expenseAmount" placeholder="0" step="1" min="0" required>
+        </div>
+
+        <div class="form-group">
+          <label>Комментарий</label>
+          <textarea id="expenseComment" placeholder="Описание расхода"></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary btn-block">Добавить</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
