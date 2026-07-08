@@ -6,6 +6,7 @@ let selectedCheckOutDate = null;
 let currentCalendarMonth = new Date();
 let allBookings = [];
 let isOnline = navigator.onLine;
+let isSubmitting = false;
 
 // Local Storage Keys
 const STORAGE_BOOKINGS = 'sauna_bookings';
@@ -289,8 +290,18 @@ function updateSharesPreview() {
 async function handleAddBooking(e) {
   e.preventDefault();
 
+  if (isSubmitting) return;
+
+  if (!isOnline) {
+    alert('❌ Для создания бронирования нужен интернет\n\n✅ Вы можете просматривать существующие брони в offline режиме');
+    return;
+  }
+
+  isSubmitting = true;
+
   if (!selectedCheckInDate || !selectedCheckOutDate) {
     alert('Выберите даты заезда и выезда в календаре');
+    isSubmitting = false;
     return;
   }
 
@@ -315,15 +326,24 @@ async function handleAddBooking(e) {
       selectedCheckOutDate = null;
       loadBookings();
       showScreen('mainScreen');
+    } else {
+      alert('Ошибка при добавлении брони');
     }
   } catch (error) {
     console.error('Error adding booking:', error);
     alert('Ошибка при добавлении брони');
+  } finally {
+    isSubmitting = false;
   }
 }
 
 async function handleAddExpense(e) {
   e.preventDefault();
+
+  if (!isOnline) {
+    alert('❌ Для добавления расходов нужен интернет');
+    return;
+  }
 
   const person = document.getElementById('expensePerson').value;
   const amount = parseFloat(document.getElementById('expenseAmount').value);
@@ -358,6 +378,11 @@ async function handleAddExpense(e) {
 }
 
 async function handleDeleteBooking() {
+  if (!isOnline) {
+    alert('❌ Для удаления брони нужен интернет');
+    return;
+  }
+
   if (!confirm('Вы уверены? Это действие удалит всю информацию о этой брони.')) {
     return;
   }
@@ -378,6 +403,11 @@ async function handleDeleteBooking() {
 }
 
 async function handleDeleteExpense(expenseId) {
+  if (!isOnline) {
+    alert('❌ Для удаления расхода нужен интернет');
+    return;
+  }
+
   if (!confirm('Удалить этот расход?')) {
     return;
   }
