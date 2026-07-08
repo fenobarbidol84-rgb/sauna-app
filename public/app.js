@@ -163,10 +163,10 @@ function renderCalendar() {
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const today = new Date();
-    const isInPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const isInPast = dateStr < todayStr;
     const isBooked = isDateBooked(dateStr);
     const isSelected = (selectedCheckInDate && dateStr === selectedCheckInDate) || (selectedCheckOutDate && dateStr === selectedCheckOutDate);
     const isInRange = selectedCheckInDate && selectedCheckOutDate && dateStr > selectedCheckInDate && dateStr < selectedCheckOutDate;
@@ -207,11 +207,10 @@ function selectDate(dateStr) {
     return;
   }
 
-  const [year, month, day] = dateStr.split('-');
-  const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   const today = new Date();
-  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  if (date < todayDate) {
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  if (dateStr < todayStr) {
     alert('Выберите сегодня или позже');
     return;
   }
@@ -235,10 +234,8 @@ function selectDate(dateStr) {
 
 function updateSelectedDatesInfo() {
   if (selectedCheckInDate && selectedCheckOutDate) {
-    const [inYear, inMonth, inDay] = selectedCheckInDate.split('-');
-    const [outYear, outMonth, outDay] = selectedCheckOutDate.split('-');
-    const checkInDate = new Date(parseInt(inYear), parseInt(inMonth) - 1, parseInt(inDay));
-    const checkOutDate = new Date(parseInt(outYear), parseInt(outMonth) - 1, parseInt(outDay));
+    const checkInDate = new Date(selectedCheckInDate + 'T00:00:00');
+    const checkOutDate = new Date(selectedCheckOutDate + 'T00:00:00');
     const days = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
     document.getElementById('selectedCheckIn').textContent = new Intl.DateTimeFormat('ru-RU', {
@@ -250,8 +247,7 @@ function updateSelectedDatesInfo() {
     document.getElementById('selectedDays').textContent = days;
     document.getElementById('selectedDatesInfo').style.display = 'block';
   } else if (selectedCheckInDate) {
-    const [year, month, day] = selectedCheckInDate.split('-');
-    const checkInDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const checkInDate = new Date(selectedCheckInDate + 'T00:00:00');
     document.getElementById('selectedCheckIn').textContent = new Intl.DateTimeFormat('ru-RU', {
       year: 'numeric', month: 'long', day: 'numeric'
     }).format(checkInDate);
