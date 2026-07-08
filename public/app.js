@@ -1,6 +1,6 @@
 // State
 let currentBookingId = null;
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = `${window.location.origin}/api`;
 let selectedCheckInDate = null;
 let selectedCheckOutDate = null;
 let currentCalendarMonth = new Date();
@@ -210,8 +210,9 @@ function selectDate(dateStr) {
   const [year, month, day] = dateStr.split('-');
   const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   const today = new Date();
-  if (date < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
-    alert('Выберите будущую дату');
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  if (date < todayDate) {
+    alert('Выберите сегодня или позже');
     return;
   }
 
@@ -405,58 +406,58 @@ async function loadBookings() {
     const bookings = await response.json();
     allBookings = bookings;
     saveToLocalStorage(STORAGE_BOOKINGS, bookings);
+    processAndRenderBookings(bookings);
   } catch (error) {
-    // Offline: load from localStorage
     console.warn('Failed to load bookings from server, using local data:', error);
     const localBookings = getFromLocalStorage(STORAGE_BOOKINGS);
     allBookings = localBookings || [];
+    processAndRenderBookings(allBookings);
+  }
+}
 
-    const now = new Date();
-    const booked = [];
-    const free = [];
+function processAndRenderBookings(bookings) {
+  const now = new Date();
+  const booked = [];
+  const free = [];
 
-    bookings.forEach(booking => {
-      const checkOut = new Date(booking.checkOut);
-      if (checkOut > now) {
-        booked.push(booking);
-      }
+  bookings.forEach(booking => {
+    const checkOut = new Date(booking.checkOut);
+    if (checkOut > now) {
+      booked.push(booking);
+    }
+  });
+
+  if (booked.length === 0) {
+    free.push({
+      checkIn: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      checkOut: null,
+      isFuture: true
     });
+  } else {
+    booked.sort((a, b) => new Date(a.checkOut) - new Date(b.checkOut));
 
-    // Calculate free dates
-    if (booked.length === 0) {
-      free.push({
-        checkIn: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-        checkOut: null,
-        isFuture: true
-      });
-    } else {
-      booked.sort((a, b) => new Date(a.checkOut) - new Date(b.checkOut));
-
-      let lastCheckOut = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      for (let i = 0; i < booked.length; i++) {
-        const nextCheckIn = new Date(booked[i].checkIn);
-        if (nextCheckIn > lastCheckOut) {
-          free.push({
-            checkIn: lastCheckOut.toISOString(),
-            checkOut: booked[i].checkIn,
-            isFree: true
-          });
-        }
-        lastCheckOut = new Date(booked[i].checkOut);
+    let lastCheckOut = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    for (let i = 0; i < booked.length; i++) {
+      const nextCheckIn = new Date(booked[i].checkIn);
+      if (nextCheckIn > lastCheckOut) {
+        free.push({
+          checkIn: lastCheckOut.toISOString(),
+          checkOut: booked[i].checkIn,
+          isFree: true
+        });
       }
-
-      free.push({
-        checkIn: lastCheckOut.toISOString(),
-        checkOut: null,
-        isFuture: true
-      });
+      lastCheckOut = new Date(booked[i].checkOut);
     }
 
-    renderDatesList('bookedDates', booked, true);
-    renderDatesList('freeDates', free, false);
-  } catch (error) {
-    console.error('Error loading bookings:', error);
+    free.push({
+      checkIn: lastCheckOut.toISOString(),
+      checkOut: null,
+      isFuture: true
+    });
   }
+
+  renderDatesList('bookedDates', booked, true);
+  renderDatesList('freeDates', free, false);
 }
 
 function renderDatesList(elementId, items, isBooked) {
